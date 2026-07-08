@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌿 JeevanMitra AI — Smart Farming Companion</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  /* Additional style to position Omni voice widget nicely */
+  #omni-widget-component {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    border-radius: 24px;
+    overflow: hidden;
+  }
+  
+  /* Adjust main content to not overlap with widget */
+  .main {
+    margin-bottom: 60px;
+  }
+  
+  @media (max-width: 768px) {
+    #omni-widget-component {
+      width: 90% !important;
+      bottom: 10px;
+      right: 5%;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-inner">
+    <div class="brand">
+      <span class="brand-icon">🌿</span>
+      <div>
+        <h1>Jeevan<span>Mitra</span> AI</h1>
+        <div class="brand-sub">Smart Farming Companion</div>
+      </div>
+    </div>
+    <div class="lang-bar">
+      <button class="lang-btn active" data-lang="en" onclick="setLanguage('en')">English</button>
+      <button class="lang-btn" data-lang="kn" onclick="setLanguage('kn')">ಕನ್ನಡ</button>
+      <button class="lang-btn" data-lang="hi" onclick="setLanguage('hi')">हिंदी</button>
+      <button class="lang-btn" data-lang="ml" onclick="setLanguage('ml')">മലയാളം</button>
+      <button class="lang-btn" data-lang="ta" onclick="setLanguage('ta')">தமிழ்</button>
+      <button class="lang-btn" data-lang="te" onclick="setLanguage('te')">తెలుగు</button>
+    </div>
+  </div>
+</header>
+
+<!-- API STATUS BAR -->
+<div class="api-bar disconnected" id="apiBar" onclick="showModal()">
+  <span class="api-dot"></span>
+  <span id="apiBarText">🔑 Click to enter your FREE Groq API key — no server needed</span>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="main" id="mainContainer">
+  <div class="content">
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="crop" onclick="switchTab('crop')">🌱 <span data-i18n="tab_crop">Crop Advisor</span></button>
+      <button class="tab-btn" data-tab="yield" onclick="switchTab('yield')">📊 <span data-i18n="tab_yield">Yield Forecast</span></button>
+      <button class="tab-btn" data-tab="disease" onclick="switchTab('disease')">🔬 <span data-i18n="tab_disease">Disease Detect</span></button>
+      <button class="tab-btn" data-tab="market" onclick="switchTab('market')">💰 <span data-i18n="tab_market">Market Prices</span></button>
+      <button class="tab-btn" data-tab="calendar" onclick="switchTab('calendar')">📅 <span data-i18n="tab_calendar">Crop Calendar</span></button>
+    </div>
+
+    <!-- ══ CROP ADVISOR ══ -->
+    <div class="tab-content active" id="tab-crop">
+      <div class="grid-2">
+        <div class="card">
+          <h2>🧪 <span data-i18n="soil_data">Soil & Environment Data</span></h2>
+          <div class="form-group">
+            <label><span data-i18n="nitrogen">Nitrogen (N)</span> <span class="range-val" id="n-value">50</span></label>
+            <input type="range" id="n" min="0" max="140" value="50" oninput="updateSlider('n');livePreviewCrop()">
+          </div>
+          <div class="form-group">
+            <label><span data-i18n="phosphorus">Phosphorus (P)</span> <span class="range-val" id="p-value">50</span></label>
+            <input type="range" id="p" min="5" max="145" value="50" oninput="updateSlider('p');livePreviewCrop()">
+          </div>
+          <div class="form-group">
+            <label><span data-i18n="potassium">Potassium (K)</span> <span class="range-val" id="k-value">50</span></label>
+            <input type="range" id="k" min="5" max="205" value="50" oninput="updateSlider('k');livePreviewCrop()">
+          </div>
+          <div class="form-group">
+            <label><span data-i18n="temperature">Temperature (°C)</span> <span class="range-val" id="temp-value">25</span></label>
+            <input type="range" id="temp" min="8" max="45" value="25" oninput="updateSlider('temp');livePreviewCrop()">
+          </div>
+          <div class="form-group">
+            <label><span data-i18n="humidity">Humidity (%)</span> <span class="range-val" id="hum-value">65</span></label>
+            <input type="range" id="hum" min="14" max="100" value="65" oninput="updateSlider('hum');livePreviewCrop()">
+          </div>
+          <div class="form-group">
+            <label><span data-i18n="ph">Soil pH</span> <span class="range-val" id="ph-value">6.5</span></label>
+            <input type="range" id="ph" min="3.5" max="9.5" value="6.5" step="0.1" oninput="updateSlider('ph');livePreviewCrop()">
+          </div>
+          <div class="form-group">
+            <label><span data-i18n="rainfall">Rainfall (mm)</span> <span class="range-val" id="rain-value">150</span></label>
+            <input type="range" id="rain" min="20" max="350" value="150" oninput="updateSlider('rain');livePreviewCrop()">
+          </div>
+          <div class="form-group">
+            <label data-i18n="soil_type">Soil Type</label>
+            <select id="soil-type" onchange="livePreviewCrop()">
+              <option value="any">Any / Unknown</option>
+              <option value="alluvial">Alluvial</option>
+              <option value="black">Black / Clay</option>
+              <option value="red">Red / Laterite</option>
+              <option value="sandy">Sandy / Loamy</option>
+              <option value="hilly">Hilly / Forest</option>
+            </select>
+          </div>
+          <div id="live-preview" style="margin-bottom:0.7rem;"></div>
+          <div class="btn-row">
+            <button class="btn btn-green btn-block" id="recommendBtn" onclick="recommendCrop()">🔮 <span data-i18n="get_recommendations">Get Recommendations</span></button>
+            <button class="btn btn-outline btn-sm" onclick="fillWeather()">🌤️ <span data-i18n="auto_weather">Auto Weather</span></button>
+            <button class="btn btn-outline btn-sm" onclick="resetSliders()">↺ Reset</button>
+            <button class="btn btn-outline btn-sm" onclick="randomFarm()">🎲</button>
+          </div>
+        </div>
+        <div class="card" id="crop-results-card">
+          <h2>🎯 <span data-i18n="recommendations">Recommendations</span></h2>
+          <p style="color:var(--text3);font-size:0.82rem;" data-i18n="enter_data_prompt">Enter soil data and click "Get Recommendations"</p>
+          <div id="crop-result-area"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ YIELD FORECAST ══ -->
+    <div class="tab-content" id="tab-yield">
+      <div class="grid-2">
+        <div class="card">
+          <h2>📊 <span data-i18n="yield_input">Yield Prediction Input</span></h2>
+          <div class="form-group">
+            <label data-i18n="select_crop">Select Crop</label>
+            <select id="yield-crop" onchange="predictYield()">
+              <option value="rice">🌾 Rice</option><option value="wheat">🌿 Wheat</option>
+              <option value="maize">🌽 Maize</option><option value="cotton">🪴 Cotton</option>
+              <option value="sugarcane">🌱 Sugarcane</option><option value="millet">🌾 Millet</option>
+              <option value="banana">🍌 Banana</option><option value="potato">🥔 Potato</option>
+              <option value="groundnut">🥜 Groundnut</option><option value="tomato">🍅 Tomato</option>
+              <option value="onion">🧅 Onion</option><option value="soybean">🫘 Soybean</option>
+              <option value="chickpea">🫛 Chickpea</option><option value="jowar">🌾 Jowar</option>
+              <option value="mustard">🌻 Mustard</option><option value="turmeric">🟡 Turmeric</option>
+              <option value="ginger">🫚 Ginger</option><option value="coconut">🥥 Coconut</option>
+              <option value="mango">🥭 Mango</option><option value="papaya">🍈 Papaya</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label><span data-i18n="nitrogen">Nitrogen (N)</span> <span class="range-val" id="yn-value">60</span></label>
+            <input type="range" id="yn" min="0" max="140" value="60" oninput="updateSlider('yn');predictYield()">
+          </div>
+          <div class="form-group">
+            <label><span data-i18n="phosphorus">Phosphorus (P)</span> <span class="range-val" id="yp-value">50</span></label>
+            <input type="range" id="yp" min="5" max="145" value="50" oninput="updateSlider('yp');predictYield()">
+          </div>
+          <div class="form-group">
+            <label><span data-i18n="potassium">Potassium (K)</span> <span class="range-val" id="yk-value">60</span></label>
+            <input type="range" id="yk" min="5" max="205" value="60" oninput="updateSlider('yk');predictYield()">
+          </div>
+          <div class="form-group">
+            <label>Area (hectares) <span class="range-val" id="ya-value">1.0</span></label>
+            <input type="range" id="ya" min="0.1" max="20" value="1.0" step="0.1" oninput="updateSlider('ya');predictYield()">
+          </div>
+          <div class="form-group">
+            <label>Irrigation Level</label>
+            <select id="irrigation" onchange="predictYield()">
+              <option value="1.0">💧 Rain-fed Only</option>
+              <option value="1.15" selected>🚿 Partial Irrigation</option>
+              <option value="1.3">🌊 Full Irrigation</option>
+            </select>
+          </div>
+        </div>
+        <div class="card">
+          <h2>🌱 <span data-i18n="yield_results">Yield Results</span></h2>
+          <p style="color:var(--text3);font-size:0.82rem;" data-i18n="enter_yield_prompt">Set parameters above</p>
+          <div id="yield-result-area"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ DISEASE DETECTION ══ -->
+    <div class="tab-content" id="tab-disease">
+      <div class="grid-2">
+        <div class="card">
+          <h2>🔬 <span data-i18n="upload_leaf">Upload Leaf Image</span></h2>
+          <div class="upload-zone" onclick="document.getElementById('leaf-image').click()">
+            <div class="icon">🍃</div>
+            <p style="font-weight:600;font-size:0.88rem;" data-i18n="click_upload">Click to upload leaf image</p>
+            <p style="font-size:0.75rem;color:var(--text3);margin-top:0.3rem;">JPG, PNG · Max 10MB</p>
+            <div id="image-preview"></div>
+          </div>
+          <input type="file" id="leaf-image" accept="image/*" style="display:none" onchange="previewImage(event)">
+          <button class="btn btn-green btn-block" style="margin-top:0.8rem;" onclick="detectDisease()">🧠 <span data-i18n="detect_disease">Detect Disease (AI)</span></button>
+          <p style="font-size:0.75rem;color:var(--text3);margin-top:0.9rem;font-weight:600;" data-i18n="quick_demo">Quick Demo:</p>
+          <div class="btn-row" style="margin-top:0.35rem;">
+            <button class="btn btn-sm btn-outline" onclick="demoDisease('healthy')">✅ Healthy</button>
+            <button class="btn btn-sm btn-outline" onclick="demoDisease('leaf_blight')">⚠️ Blight</button>
+            <button class="btn btn-sm btn-outline" onclick="demoDisease('rust')">🔴 Rust</button>
+            <button class="btn btn-sm btn-outline" onclick="demoDisease('powdery_mildew')">🌫️ Mildew</button>
+            <button class="btn btn-sm btn-outline" onclick="demoDisease('bacterial_spot')">🦠 Bacteria</button>
+          </div>
+        </div>
+        <div class="card" id="disease-results-card">
+          <h2>📋 <span data-i18n="diagnosis">Diagnosis Results</span></h2>
+          <p style="color:var(--text3);font-size:0.82rem;" data-i18n="upload_prompt">Upload a leaf image and click detect</p>
+          <div id="disease-result-area"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ MARKET PRICES ══ -->
+    <div class="tab-content" id="tab-market">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.8rem;">
+          <h2 style="margin:0;">💰 <span data-i18n="market_prices">Market Prices</span> <span style="font-size:0.72rem;color:var(--text3);font-weight:400;" id="market-date"></span></h2>
+          <div class="btn-row">
+            <button class="btn btn-sm btn-outline" onclick="loadMarketPrices()">🔄 Refresh</button>
+            <button class="btn btn-sm btn-outline" onclick="sortMarketBy('price')">⬇️ By Price</button>
+            <button class="btn btn-sm btn-outline" onclick="sortMarketBy('trend')">📈 By Trend</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="price-table">
+            <thead><tr>
+              <th data-i18n="crop_col">Crop</th>
+              <th data-i18n="price_col">Price (₹/qtl)</th>
+              <th data-i18n="market_col">Market</th>
+              <th data-i18n="trend_col">Trend</th>
+              <th>7-Day</th>
+              <th>Season</th>
+            </tr></thead>
+            <tbody id="price-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card" style="margin-top:0.8rem;">
+        <h2>📊 <span data-i18n="price_chart">Price Chart</span></h2>
+        <canvas id="price-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- ══ CROP CALENDAR ══ -->
+    <div class="tab-content" id="tab-calendar">
+      <div class="card">
+        <h2>📅 Crop Calendar — Sowing & Harvest Guide</h2>
+        <div class="form-group" style="max-width:300px;">
+          <label>Select Region</label>
+          <select id="cal-region" onchange="renderCalendar()">
+            <option value="kn">Karnataka</option>
+            <option value="ap">Andhra Pradesh / Telangana</option>
+            <option value="mh">Maharashtra</option>
+            <option value="tn">Tamil Nadu</option>
+            <option value="kl">Kerala</option>
+            <option value="pu">Punjab / Haryana</option>
+            <option value="up">Uttar Pradesh</option>
+            <option value="wb">West Bengal</option>
+          </select>
+        </div>
+        <div id="calendar-area"></div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ============================================ -->
+<!-- OMNI VOICE WIDGET - Full Interface Style     -->
+<!-- Configured as Voice Widget with glassmorphic  -->
+<!-- ============================================ -->
+<div id="omni-widget-component"></div>
+
+<script id="omnidimension-web-widget" async src="https://omnidim.io/web_widget.js?secret_key=de49ff3e6231999c3ea5f472ae00a869"></script>
+
+<!-- API MODAL -->
+<div class="modal-overlay" id="apiModal">
+  <div class="modal-box">
+    <h2>🔑 Connect Groq AI</h2>
+    <p>JeevanMitra AI uses <strong>Groq</strong> — free, fast, no credit card needed. Get your API key in 60 seconds:</p>
+    <ol style="font-size:0.8rem;color:var(--text2);padding-left:1.2rem;margin-bottom:1rem;line-height:2;">
+      <li>Go to <a href="https://console.groq.com" target="_blank" style="color:var(--green);">console.groq.com</a></li>
+      <li>Sign up free → API Keys → Create Key</li>
+      <li>Paste below — key starts with <code style="color:var(--green);">gsk_</code></li>
+    </ol>
+    <input type="password" class="modal-input" id="apiKeyInput" placeholder="gsk_..." autocomplete="off">
+    <div class="modal-btns">
+      <button class="btn btn-green" onclick="saveKey()" style="flex:1;justify-content:center;">✓ Save & Activate</button>
+      <button class="btn btn-outline" onclick="closeModal()">Skip (Demo Mode)</button>
+    </div>
+    <a href="https://console.groq.com/keys" target="_blank" class="modal-link">↗ Open Groq Console</a>
+  </div>
+</div>
+
+<script src="data/cropsData.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/crop.js"></script>
+<script src="js/yield.js"></script>
+<script src="js/disease.js"></script>
+<script src="js/market.js"></script>
+<script src="js/chat.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+  // Optional: Initialize Omni widget with custom config (if needed)
+  window.addEventListener('load', function() {
+    console.log('🌿 JeevanMitra AI with Omni Voice Widget ready');
+    
+    // You can add custom initialization for the voice widget here if needed
+    if (window.OmniWidget) {
+      window.OmniWidget.init({
+        voiceEnabled: true,
+        language: 'en',
+        autoOpen: false
+      });
+    }
+  });
+</script>
+
+</body>
+</html>
